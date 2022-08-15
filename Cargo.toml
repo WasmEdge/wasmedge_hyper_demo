@@ -1,0 +1,8 @@
+[package]
+name = "wasmedge_hyper_demo"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hyper = {git = "https://github.com/WasmEdge/hyper.git", branch = "wasmedge", features = ["http1", "server"]}
+tokio = { git="https://github.com/WasmEdge/tokio.git", branch = "wasmedge", features = ["rt", "macros", "net", "time"]}
