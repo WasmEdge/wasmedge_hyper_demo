@@ -68,3 +68,12 @@ runner = "wasmedge"
 ```
 
 And then we can use `cargo run` to execute it directly.
+
+# FAQ
+
+## use of unstable library feature 'wasi_ext'
+
+If you are using rustc 1.64, you may encounter this error. There are two options:
+
+1. Update rustc to newer version. Validated versions are `1.65` and `1.59`.
+2. Add `#![feature(wasi_ext)]` to the top of `mio/src/lib.rs`.
