@@ -1,6 +1,8 @@
 # WasmEdge Hyper Demo
 
-In this project, we demonstrate how to use **hyper** and **tokio** to build async http client in WebAssembly and execute it using [WasmEdge]().
+In this project, we demonstrate how to use **hyper** and **tokio** to build async http client in WebAssembly and execute it using [WasmEdge]("https://github.com/WasmEdge/WasmEdge").
+
+There have two examples, the client and the server.
 
 ## Why tokio in WasmEdge?
 
@@ -54,7 +56,8 @@ cargo build --target wasm32-wasi
 Then we can run it using WasmEdge.
 
 ```bash
-wasmedge target/wasm32-wasi/debug/wasmedge_hyper_demo.wasm
+wasmedge target/wasm32-wasi/debug/wasmedge_hyper_server.wasm
+wasmedge target/wasm32-wasi/debug/wasmedge_hyper_client.wasm
 ```
 
 For simpilicity, we can add the following configs to `.cargo/config.toml`.
@@ -67,7 +70,7 @@ target="wasm32-wasi"
 runner = "wasmedge"
 ```
 
-And then we can use `cargo run` to execute it directly.
+And then we can use `cargo run --bin wasmedge_hyper_client` and `cargo run --bin wasmedge_hyper_server` to execute them directly.
 
 # FAQ
 
