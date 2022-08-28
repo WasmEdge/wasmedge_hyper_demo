@@ -41,36 +41,11 @@ hyper = {git = "https://github.com/WasmEdge/hyper.git", branch = "wasmedge", fea
 tokio = { git="https://github.com/WasmEdge/tokio.git", branch = "wasmedge", features=["rt", "macros", "net", "time"]}
 ```
 
-## Write the code 
+## Examples
 
-We need to add some code into `src/main.rs`.
-
-## Build and run it
-
-First we need to compile the code.
-
-```bash 
-cargo build --target wasm32-wasi
-```
-
-Then we can run it using WasmEdge.
-
-```bash
-wasmedge target/wasm32-wasi/debug/wasmedge_hyper_server.wasm
-wasmedge target/wasm32-wasi/debug/wasmedge_hyper_client.wasm
-```
-
-For simpilicity, we can add the following configs to `.cargo/config.toml`.
-
-```toml
-[build]
-target="wasm32-wasi"
-
-[target.wasm32-wasi]
-runner = "wasmedge"
-```
-
-And then we can use `cargo run --bin wasmedge_hyper_client` and `cargo run --bin wasmedge_hyper_server` to execute them directly.
+* [HTTP client](client/README.md) 
+* [HTTP server](server/README.md) 
+* [HTTP server with Tensorflow](server-tflite/README.md) 
 
 # FAQ
 
