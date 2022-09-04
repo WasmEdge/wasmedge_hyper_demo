@@ -2,7 +2,11 @@
 
 ## Prequsites
 
-In order to run this example, you will need to install [wasmedge-tensorflow-lite](https://github.com/second-state/WasmEdge-tensorflow-tools).
+In order to run this example, you will need to install [wasmedge-tensorflow-lite](https://github.com/second-state/WasmEdge-tensorflow-tools) like this.
+
+```
+curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -e all
+```
 
 ## Build
 
