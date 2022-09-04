@@ -2,8 +2,6 @@
 
 In this project, we demonstrate how to use **hyper** and **tokio** to build async http client in WebAssembly and execute it using [WasmEdge]("https://github.com/WasmEdge/WasmEdge").
 
-There have two examples, the client and the server.
-
 ## Why tokio in WasmEdge?
 
 There are growing demands to perform network requests in WASM and cloud computing. But it would be inefficient to perform network requests synchronously so we need async in WASM. 
@@ -25,10 +23,10 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup target add wasm32-wasi
 ```
 
-Then install the WasmEdge.
+Then install the WasmEdge. You will need `all` extensions to run the [HTTP server with Tensorflow](server-tflite/README.md) example.
 
 ```bash
-curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash
+curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -e all
 ```
 
 ## Add dependencies in **Cargo.toml**
