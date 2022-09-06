@@ -17,6 +17,6 @@ wasmedge target/wasm32-wasi/release/wasmedge_hyper_server.wasm
 Run the following from another terminal.
 
 ```
-$ curl http://localhost:3000/echo -X POST -d "WasmEdge"
+$ curl http://localhost:8080/echo -X POST -d "WasmEdge"
 WasmEdge
 ```
