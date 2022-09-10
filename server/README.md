@@ -1,4 +1,4 @@
-# TFLite server example
+# HTTP server example
 
 ## Build
 
