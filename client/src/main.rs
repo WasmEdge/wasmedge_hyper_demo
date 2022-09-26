@@ -1,6 +1,7 @@
 #![deny(warnings)]
 #![warn(rust_2018_idioms)]
 use hyper::{body::HttpBody as _, Client};
+use hyper::{Body, Method, Request};
 // use tokio::io::{self, AsyncWriteExt as _};
 
 // A simple type alias so as to DRY.
@@ -20,9 +21,16 @@ async fn main() -> Result<()> {
     fetch_url(url).await?;
 
     let url_str = "http://eu.httpbin.org/get?msg=WasmEdge";
-    println!("\nGET as string: {}", url_str);
+    println!("\nGET and get result as string: {}", url_str);
     let url = url_str.parse::<hyper::Uri>().unwrap();
-    fetch_url_as_str(url).await
+    fetch_url_return_str(url).await?;
+
+    let url_str = "http://eu.httpbin.org/post";
+    let post_body_str = "hello wasmedge";
+    println!("\nPOST and get result as string: {}", url_str);
+    println!("with a POST body: {}", post_body_str);
+    let url = url_str.parse::<hyper::Uri>().unwrap();
+    post_url_return_str(url, post_body_str.as_bytes()).await
 }
 
 async fn fetch_url(url: hyper::Uri) -> Result<()> {
@@ -43,9 +51,27 @@ async fn fetch_url(url: hyper::Uri) -> Result<()> {
     Ok(())
 }
 
-async fn fetch_url_as_str (url: hyper::Uri) -> Result<()> {
+async fn fetch_url_return_str (url: hyper::Uri) -> Result<()> {
     let client = Client::new();
     let mut res = client.get(url).await?;
+
+    let mut resp_data = Vec::new();
+    while let Some(next) = res.data().await {
+        let chunk = next?;
+        resp_data.extend_from_slice(&chunk);
+    }
+    println!("{}", String::from_utf8_lossy(&resp_data));
+
+    Ok(())
+}
+
+async fn post_url_return_str (url: hyper::Uri, post_body: &'static [u8]) -> Result<()> {
+    let client = Client::new();
+    let req = Request::builder()
+        .method(Method::POST)
+        .uri(url)
+        .body(Body::from(post_body))?;
+    let mut res = client.request(req).await?;
 
     let mut resp_data = Vec::new();
     while let Some(next) = res.data().await {
