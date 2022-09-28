@@ -1,0 +1,90 @@
+name: examples
+
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'info'
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+      
+    - name: Install apt-get packages
+      run: |
+        sudo ACCEPT_EULA=Y apt-get update
+        sudo ACCEPT_EULA=Y apt-get upgrade
+        sudo apt-get install wget git curl software-properties-common build-essential
+    
+    - name: Install Rust target for wasm
+      run: |
+        rustup target add wasm32-wasi
+        
+    - name: Install WasmEdge
+      run: |
+        VERSION=0.11.0
+        curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | sudo bash -s -- -e all --version=$VERSION --tf-version=$VERSION --tf-deps-version=$VERSION --tf-tools-version=$VERSION --image-version=$VERSION --image-deps-version=$VERSION  -p /usr/local
+    
+    - name: Client example
+      run: |
+        cd client
+        cargo build --target wasm32-wasi --release
+        wasmedgec target/wasm32-wasi/release/wasmedge_hyper_client.wasm wasmedge_hyper_client.wasm
+        resp=$(wasmedge wasmedge_hyper_client.wasm)
+        echo "$resp"
+        if [[ $resp == *"WasmEdge"* ]]; then
+          echo -e "Execution Success!"
+        else
+          echo -e "Execution Fail!"
+          exit 1
+        fi
+        
+    - name: Server example
+      run: |
+        cd server
+        cargo build --target wasm32-wasi --release
+        wasmedgec target/wasm32-wasi/release/wasmedge_hyper_server.wasm wasmedge_hyper_server.wasm
+        nohup wasmedge wasmedge_hyper_server.wasm &
+        echo $! > wasmedge.pid
+        sleep 15
+        resp=$(curl http://localhost:8080/echo -X POST -d "WasmEdge")
+        echo "$resp"
+        kill -9 `cat wasmedge.pid`
+        rm wasmedge.pid
+        if [[ $resp == *"WasmEdge"* ]]; then
+          echo -e "Execution Success!"
+        else
+          echo -e "Execution Fail!"
+          exit 1
+        fi
+        
+    - name: TFLite Server example
+      run: |
+        cd server-tflite
+        cargo build --target wasm32-wasi --release
+        wasmedgec target/wasm32-wasi/release/wasmedge_hyper_server_tflite.wasm wasmedge_hyper_server_tflite.wasm
+        nohup wasmedge-tensorflow-lite wasmedge_hyper_server_tflite.wasm &
+        echo $! > wasmedge.pid
+        sleep 15
+        resp=$(curl http://localhost:8080/classify -X POST --data-binary "@grace_hopper.jpg")
+        echo "$resp"
+        kill -9 `cat wasmedge.pid`
+        rm wasmedge.pid
+        if [[ $resp == *"uniform"* ]]; then
+          echo -e "Execution Success!"
+        else
+          echo -e "Execution Fail!"
+          exit 1
+        fi
+        
+    
