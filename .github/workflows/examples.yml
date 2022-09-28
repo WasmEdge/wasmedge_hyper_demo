@@ -70,7 +70,7 @@ jobs:
         
     - name: TFLite Server example
       run: |
-        cd server
+        cd server-tflite
         cargo build --target wasm32-wasi --release
         wasmedgec target/wasm32-wasi/release/wasmedge_hyper_server_tflite.wasm wasmedge_hyper_server_tflite.wasm
         nohup wasmedge wasmedge_hyper_server_tflite.wasm &
