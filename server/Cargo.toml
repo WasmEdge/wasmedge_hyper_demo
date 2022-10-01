@@ -4,5 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-hyper = {git = "https://github.com/WasmEdge/hyper.git", branch = "wasmedge", features = ["http1", "server"]}
-tokio = { git="https://github.com/WasmEdge/tokio.git", features = ["rt", "macros", "net", "time"]}
+hyper_wasi = { version = "0.15", features = ["full"]}
+tokio_wasi = { version = "1.21", features = ["rt", "macros", "net", "time", "io-util"]}
