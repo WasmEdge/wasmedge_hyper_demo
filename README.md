@@ -35,8 +35,8 @@ In this project, we add tokio and reqwest as dependencies.
 
 ```toml
 [dependencies]
-hyper = {git = "https://github.com/WasmEdge/hyper.git", branch = "wasmedge", features = ["http1", "server"]}
-tokio = { git="https://github.com/WasmEdge/tokio.git", branch = "wasmedge", features=["rt", "macros", "net", "time"]}
+hyper_wasi = { version = "0.15", features = ["full"]}
+tokio_wasi = { version = "1.21", features = ["rt", "macros", "net", "time", "io-util"]}
 ```
 
 ## Examples
