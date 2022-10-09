@@ -1,0 +1,20 @@
+services:
+  server: # docker compose run --no-TTY server
+    image: server
+    build:
+      context: .
+      target: server
+      platforms:
+        - wasi/wasm32
+    runtime: io.containerd.wasmedge.v1
+    ports:
+      - 8080:8080
+  client: # docker compose run --no-TTY client
+    image: client
+    build:
+      context: .
+      target: client
+      platforms:
+        - wasi/wasm32
+    runtime: io.containerd.wasmedge.v1
+    network_mode: host
