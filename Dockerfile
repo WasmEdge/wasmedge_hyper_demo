@@ -2,6 +2,8 @@ FROM --platform=$BUILDPLATFORM rust:1.64 AS buildbase
 RUN rustup target add wasm32-wasi
 WORKDIR /src
 
+RUN rustup target add wasm32-wasi
+
 FROM --platform=$BUILDPLATFORM buildbase AS buildclient
 COPY client/ /src
 RUN --mount=type=cache,target=/usr/local/cargo/git/db \
