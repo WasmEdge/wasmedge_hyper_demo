@@ -10,7 +10,6 @@ As tokio is widely accepted, we can bring many projects that depend on tokio to 
 
 With the help of tokio support of WasmEdge, the developers can compile the projects that use tokio into WASM and execute it using WasmEdge.
 
-
 ## Prequsites
 
 We need install rust and wasm target first.
@@ -40,6 +39,14 @@ tokio_wasi = { version = "1.21", features = ["rt", "macros", "net", "time", "io-
 ```
 
 ## Examples
+
+If you are using Docker, you can use one command to build and run both the client and server examples in this repo. The [client example](client) will run and quit upon completion. The [server example](server) starts a server that listens for incoming HTTP requests, and you can interact with it through `curl`.
+
+```bash
+docker compose up
+```
+
+Details about the example apps are as below.
 
 * [HTTP client](client/README.md) 
 * [HTTP server](server/README.md) 
