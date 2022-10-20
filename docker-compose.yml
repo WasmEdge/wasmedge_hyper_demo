@@ -17,4 +17,3 @@ services:
       platforms:
         - wasi/wasm32
     runtime: io.containerd.wasmedge.v1
-    network_mode: host
