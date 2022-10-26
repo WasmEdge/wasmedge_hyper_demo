@@ -12,7 +12,12 @@ With the help of tokio support of WasmEdge, the developers can compile the proje
 
 ## Quickstart with Docker
 
-The easiest way to get started is to use a version of [Docker Desktop](https://github.com/chris-crone/wasm-day-na-22#prerequisites) or [Docker Engine](https://github.com/chris-crone/wasm-day-na-22/tree/main/server) with Wasm WASI support. You just need to type one command.
+The easiest way to get started is to use a version of Docker Desktop or Docker CLI with Wasm support.
+
+* [Install Docker Desktop + Wasm (Beta)](https://docs.docker.com/desktop/wasm/)
+* [Install Docker CLI + Wasm](https://github.com/chris-crone/wasm-day-na-22/tree/main/server)
+
+Then, you just need to type one command.
 
 ```bash
 docker compose up
