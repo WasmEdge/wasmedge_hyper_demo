@@ -11,7 +11,7 @@ async fn echo(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
     match (req.method(), req.uri().path()) {
         // Serve some instructions at /
         (&Method::GET, "/") => Ok(Response::new(Body::from(
-            "Try POSTing data to /echo such as: `curl localhost:3000/echo -XPOST -d 'hello world'`",
+            "Try POSTing data to /echo such as: `curl localhost:8080/echo -XPOST -d 'hello world'`",
         ))),
 
         // Simply echo the body back to the client.
