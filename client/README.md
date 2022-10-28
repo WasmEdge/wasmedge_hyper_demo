@@ -5,6 +5,7 @@
 With an WASI-enabled Docker, you just need one line of command to build and run the HTTP client example. For details, refer to the [Dockerfile](../Dockerfile) and [docker-compose.yml](../docker-compose.yml) files.
 
 ```bash
+docker compose build
 docker compose run --no-TTY client
 ```
 
