@@ -5,7 +5,7 @@
 With an WASI-enabled Docker, you just need one line of command to build and run the HTTP server example. For details, refer to the [Dockerfile](../Dockerfile) and [docker-compose.yml](../docker-compose.yml) files.
 
 ```bash
-docker compose run --no-TTY server
+docker compose run --no-TTY -p 8080:8080 server
 ```
 
 Next, you can jump directly to the [Test](#test) section. If you want to build and run the application step by step on your own system, read on.
