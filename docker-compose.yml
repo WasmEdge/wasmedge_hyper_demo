@@ -1,5 +1,5 @@
 services:
-  server: # docker compose run --no-TTY server
+  server: # docker compose run --no-TTY -p 8080:8080 server
     image: server
     build:
       context: .
