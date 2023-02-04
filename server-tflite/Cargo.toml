@@ -5,5 +5,5 @@ edition = "2021"
 
 [dependencies]
 hyper_wasi = { version = "0.15", features = ["full"]}
-tokio_wasi = { version = "1.21", features = ["rt", "macros", "net", "time", "io-util"]}
+tokio_wasi = { version = "1", features = ["rt", "macros", "net", "time", "io-util"]}
 wasmedge_tensorflow_interface = "^0.2.0"
