@@ -16,7 +16,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/git/db \
     --mount=type=cache,target=/usr/local/cargo/registry/index \
     cargo build --target wasm32-wasi --release
 
-FROM --platform=$BUILDPLATFORM buildbase AS buildserver
+FROM --platform=$BUILDPLATFORM buildbase AS buildserverwarp
 COPY server-warp/ /src
 RUN --mount=type=cache,target=/usr/local/cargo/git/db \
     --mount=type=cache,target=/usr/local/cargo/registry/cache \
@@ -33,4 +33,4 @@ COPY --link --from=buildserver /src/target/wasm32-wasi/release/wasmedge_hyper_se
 
 FROM scratch AS server-warp
 ENTRYPOINT [ "wasmedge_warp_server.wasm" ]
-COPY --link --from=buildserver /src/target/wasm32-wasi/release/wasmedge_warp_server.wasm wasmedge_warp_server.wasm
+COPY --link --from=buildserverwarp /src/target/wasm32-wasi/release/wasmedge_warp_server.wasm wasmedge_warp_server.wasm
