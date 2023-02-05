@@ -1,4 +1,4 @@
-# HTTP server example
+# HTTP server example using the Warp crate
 
 ## Quickstart with Docker
 
@@ -6,7 +6,7 @@ With an WASI-enabled Docker, you just need one line of command to build and run 
 
 ```bash
 docker compose build
-docker compose run --no-TTY -p 8080:8080 server
+docker compose run --no-TTY -p 8080:8080 server-warp
 ```
 
 Next, you can jump directly to the [Test](#test) section. If you want to build and run the application step by step on your own system, read on.
