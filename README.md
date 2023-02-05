@@ -17,10 +17,33 @@ The easiest way to get started is to use a version of Docker Desktop or Docker C
 * [Install Docker Desktop + Wasm (Beta)](https://docs.docker.com/desktop/wasm/)
 * [Install Docker CLI + Wasm](https://github.com/chris-crone/wasm-day-na-22/tree/main/server)
 
-Then, you just need to type one command.
+Build all the examples using Docker. There is no need to install Rust or WasmEdge here since Docker sets it all up for you.
 
 ```bash
-docker compose up
+docker compose build
+```
+
+Then, you just need to type one command to run each example.
+
+```bash
+# To run the HTTP client example
+$ docker compose run --no-TTY client
+... ...
+
+# To run the HTTP server
+$ docker compose run --no-TTY -p 8080:8080 server
+... ...
+# Test the HTTP server using curl
+$ curl http://localhost:8080/echo -X POST -d "WasmEdge"
+WasmEdge
+
+# To run the Warp HTTP server
+$ docker compose run --no-TTY -p 8080:8080 server-warp
+... ...
+# Test the HTTP server using curl
+$ curl http://localhost:8080/echo -X POST -d "WasmEdge"
+WasmEdge
+
 ```
 
 It runs both the client and server examples in this repo. See the [Dockerfile](Dockerfile) and [docker-compose.yml](docker-compose.yml) files.  The [client example](client) will run and quit upon completion. The [server example](server) starts a server that listens for incoming HTTP requests, and you can interact with it through `curl`.
