@@ -54,7 +54,7 @@ In this project, we add tokio and reqwest as dependencies.
 ```toml
 [dependencies]
 hyper_wasi = { version = "0.15", features = ["full"]}
-tokio_wasi = { version = "1.21", features = ["rt", "macros", "net", "time", "io-util"]}
+tokio_wasi = { version = "1", features = ["rt", "macros", "net", "time", "io-util"]}
 ```
 
 ## Examples
@@ -63,6 +63,7 @@ Details about the example apps are as below.
 
 * [HTTP client](client/README.md) 
 * [HTTP server](server/README.md) 
+* [HTTP server in warp framework](server-warp/README.md) 
 * [HTTP server with Tensorflow](server-tflite/README.md) 
 
 # FAQ

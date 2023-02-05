@@ -68,6 +68,25 @@ jobs:
           exit 1
         fi
         
+    - name: Warp example
+      run: |
+        cd server-warp
+        cargo build --target wasm32-wasi --release
+        wasmedgec target/wasm32-wasi/release/wasmedge_warp_server.wasm wasmedge_warp_server.wasm
+        nohup wasmedge wasmedge_warp_server.wasm &
+        echo $! > wasmedge.pid
+        sleep 15
+        resp=$(curl http://localhost:8080/echo -X POST -d "WasmEdge")
+        echo "$resp"
+        kill -9 `cat wasmedge.pid`
+        rm wasmedge.pid
+        if [[ $resp == *"WasmEdge"* ]]; then
+          echo -e "Execution Success!"
+        else
+          echo -e "Execution Fail!"
+          exit 1
+        fi
+        
     - name: TFLite Server example
       run: |
         cd server-tflite
