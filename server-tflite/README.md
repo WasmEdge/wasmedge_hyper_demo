@@ -15,6 +15,7 @@ sudo mv libtensorflowlite_c.so /usr/local/lib
 Then, install WasmEdge with Tensorflow Lite plugin:
 
 ```
+VERSION=0.12.1
 curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | sudo bash -s -- -v $VERSION --plugins wasi_nn-tensorflowlite -p /usr/local
 ```
 
