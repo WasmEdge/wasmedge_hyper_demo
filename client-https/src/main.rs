@@ -5,7 +5,7 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    let url = "https://httpbin.org/get".parse::<hyper::Uri>().unwrap();
+    let url = "https://eu.httpbin.org/get?msg=WasmEdge".parse::<hyper::Uri>().unwrap();
     fetch_https_url(url).await.unwrap();
 }
 

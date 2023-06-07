@@ -38,13 +38,30 @@ jobs:
         rm -f WasmEdge-tensorflow-deps-TFLite-$VERSION-manylinux2014_x86_64.tar.gz
         sudo mv libtensorflowlite_c.so /usr/local/lib
         curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | sudo bash -s -- -v $VERSION --plugins wasi_nn-tensorflowlite -p /usr/local
-    
+        wget https://github.com/second-state/wasmedge_rustls_plugin/releases/download/0.1.0/wasmedge_rustls_plugin_ubuntu-20.04.zip
+        unzip wasmedge_rustls_plugin_ubuntu-20.04.zip
+        sudo mv target/release/libwasmedge_rustls.so /usr/local/lib/wasmedge
+
     - name: Client example
       run: |
         cd client
         cargo build --target wasm32-wasi --release
         wasmedgec target/wasm32-wasi/release/wasmedge_hyper_client.wasm wasmedge_hyper_client.wasm
         resp=$(wasmedge wasmedge_hyper_client.wasm)
+        echo "$resp"
+        if [[ $resp == *"WasmEdge"* ]]; then
+          echo -e "Execution Success!"
+        else
+          echo -e "Execution Fail!"
+          exit 1
+        fi
+    
+    - name: Client https example
+      run: |
+        cd client-https
+        cargo build --target wasm32-wasi --release
+        wasmedgec target/wasm32-wasi/release/wasmedge_hyper_client_https.wasm wasmedge_hyper_client_https.wasm
+        resp=$(wasmedge wasmedge_hyper_client_https.wasm)
         echo "$resp"
         if [[ $resp == *"WasmEdge"* ]]; then
           echo -e "Execution Success!"
