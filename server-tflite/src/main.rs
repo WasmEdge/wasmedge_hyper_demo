@@ -6,14 +6,16 @@ use std::result::Result;
 use std::io::Cursor;
 use image::io::Reader;
 use image::DynamicImage;
-use std::convert::TryInto;
-use wasi_nn;
+use wasi_nn::{GraphBuilder, GraphEncoding, ExecutionTarget, TensorType};
 
 /// This is our service handler. It receives a Request, routes on its
 /// path, and returns a Future of a Response.
-async fn classify(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
+async fn classify(req: Request<Body>) -> Result<Response<Body>, anyhow::Error> {
     let model_data: &[u8] = include_bytes!("models/mobilenet_v1_1.0_224/mobilenet_v1_1.0_224_quant.tflite");
     let labels = include_str!("models/mobilenet_v1_1.0_224/labels_mobilenet_quant_v1_224.txt");
+    let graph = GraphBuilder::new(GraphEncoding::TensorflowLite, ExecutionTarget::CPU).build_from_bytes(&[model_data])?;
+    let mut ctx = graph.init_execution_context()?;
+    /*
     let graph = unsafe {
         wasi_nn::load(
             &[model_data],
@@ -23,6 +25,7 @@ async fn classify(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
         .unwrap()
     };
     let context = unsafe { wasi_nn::init_execution_context(graph).unwrap() };
+    */
 
     match (req.method(), req.uri().path()) {
         // Serve some instructions at /
@@ -33,6 +36,8 @@ async fn classify(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
         (&Method::POST, "/classify") => {
             let buf = hyper::body::to_bytes(req.into_body()).await?;
             let tensor_data = image_to_tensor(&buf, 224, 224);
+            ctx.set_input(0, TensorType::U8, &[1, 224, 224, 3], &tensor_data)?;
+            /*
             let tensor = wasi_nn::Tensor {
                 dimensions: &[1, 224, 224, 3],
                 r#type: wasi_nn::TENSOR_TYPE_U8,
@@ -41,12 +46,18 @@ async fn classify(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
             unsafe {
                 wasi_nn::set_input(context, 0, tensor).unwrap();
             }
+            */
             // Execute the inference.
+            ctx.compute()?;
+            /*
             unsafe {
                 wasi_nn::compute(context).unwrap();
             }
+            */
             // Retrieve the output.
             let mut output_buffer = vec![0u8; labels.lines().count()];
+            _ = ctx.get_output(0, &mut output_buffer)?;
+            /*
             unsafe {
                 wasi_nn::get_output(
                     context,
@@ -56,6 +67,7 @@ async fn classify(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
                 )
                 .unwrap();
             }
+            */
             // Sort the result with the highest probability result first
             let results = sort_results(&output_buffer);
             /*
