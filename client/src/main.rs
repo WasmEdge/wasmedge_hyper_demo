@@ -19,13 +19,13 @@ async fn main() -> Result<()> {
         return Ok(());
     }
     fetch_url(url).await?;
-    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+    // tokio::time::sleep(std::time::Duration::from_secs(5)).await;
 
     let url_str = "http://eu.httpbin.org/get?msg=WasmEdge";
     println!("\nGET and get result as string: {}", url_str);
     let url = url_str.parse::<hyper::Uri>().unwrap();
     fetch_url_return_str(url).await?;
-    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+    // tokio::time::sleep(std::time::Duration::from_secs(5)).await;
 
     let url_str = "http://eu.httpbin.org/post";
     let post_body_str = "hello wasmedge";
