@@ -19,20 +19,20 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      
+
     - name: Install apt-get packages
       run: |
         sudo ACCEPT_EULA=Y apt-get update
         sudo ACCEPT_EULA=Y apt-get upgrade
         sudo apt-get install wget git curl software-properties-common build-essential
-    
+
     - name: Install Rust target for wasm
       run: |
         rustup target add wasm32-wasi
-        
+
     - name: Install WasmEdge
       run: |
-        VERSION=0.13.2
+        VERSION=0.13.3
         TFVERSION=2.12.0
         curl -s -L -O --remote-name-all https://github.com/second-state/WasmEdge-tensorflow-deps/releases/download/TF-2.12.0-CC/WasmEdge-tensorflow-deps-TFLite-TF-$TFVERSION-CC-manylinux2014_x86_64.tar.gz
         tar -zxf WasmEdge-tensorflow-deps-TFLite-TF-$TFVERSION-CC-manylinux2014_x86_64.tar.gz
@@ -43,7 +43,7 @@ jobs:
         wget https://github.com/second-state/wasmedge_rustls_plugin/releases/download/0.2.0/wasmedge_rustls_plugin_ubuntu-20.04.zip
         unzip wasmedge_rustls_plugin_ubuntu-20.04.zip
         sudo mv target/release/libwasmedge_rustls.so /usr/local/lib/wasmedge
-    
+
     - name: Client https example
       run: |
         cd client-https
@@ -57,7 +57,7 @@ jobs:
           echo -e "Execution Fail!"
           exit 1
         fi
-        
+
     - name: Server example
       run: |
         cd server
@@ -76,7 +76,7 @@ jobs:
           echo -e "Execution Fail!"
           exit 1
         fi
-        
+
     - name: Warp example
       run: |
         cd server-warp
@@ -95,7 +95,7 @@ jobs:
           echo -e "Execution Fail!"
           exit 1
         fi
-        
+
     - name: TFLite Server example
       run: |
         cd server-tflite
@@ -128,4 +128,4 @@ jobs:
           echo -e "Execution Fail!"
           exit 1
         fi
-    
+
