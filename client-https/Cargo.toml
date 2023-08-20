@@ -11,3 +11,4 @@ http-body-util = "0.1.0-rc.2"
 tokio_wasi = { version = "1", features = ["rt", "macros", "net", "time", "io-util"]}
 pretty_env_logger = "0.4.0"
 wasmedge_rustls_api = { version = "0.1", features = [ "tokio_async" ] }
+wasmedge_hyper_rustls = "0.1.0"
