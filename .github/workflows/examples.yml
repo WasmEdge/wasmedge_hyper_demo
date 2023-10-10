@@ -130,3 +130,18 @@ jobs:
           exit 1
         fi
 
+    - name: Client HTTPS example
+      run: |
+        cd client
+        cargo build --target wasm32-wasi --release
+        wasmedge compile target/wasm32-wasi/release/wasmedge_hyper_client_https.wasm wasmedge_hyper_client_https.wasm
+        resp=$(wasmedge wasmedge_hyper_client_https.wasm)
+        echo "$resp"
+        if [[ $resp == *"WasmEdge"* ]]; then
+          echo -e "Execution Success!"
+        else
+          echo -e "Execution Fail!"
+          exit 1
+        fi
+        
+
