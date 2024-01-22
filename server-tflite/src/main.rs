@@ -1,19 +1,29 @@
-use hyper::service::{make_service_fn, service_fn};
-use hyper::{Body, Method, Request, Response, StatusCode, Server};
-use std::convert::Infallible;
-use std::net::SocketAddr;
-use std::result::Result;
-use std::io::Cursor;
+use bytes::Bytes;
+use http_body_util::{combinators::BoxBody, BodyExt, Full};
+use hyper::server::conn::http1;
+use hyper::service::service_fn;
+use hyper::{Method, Request, Response, StatusCode};
 use image::io::Reader;
 use image::DynamicImage;
-use wasi_nn::{GraphBuilder, GraphEncoding, ExecutionTarget, TensorType};
+use std::io::Cursor;
+use std::net::SocketAddr;
+use std::os::fd::{FromRawFd, IntoRawFd};
+use std::pin::Pin;
+use std::result::Result;
+use std::task::{Context, Poll};
+use tokio::net::TcpListener;
+use wasi_nn::{ExecutionTarget, GraphBuilder, GraphEncoding, TensorType};
 
 /// This is our service handler. It receives a Request, routes on its
 /// path, and returns a Future of a Response.
-async fn classify(req: Request<Body>) -> Result<Response<Body>, anyhow::Error> {
-    let model_data: &[u8] = include_bytes!("models/mobilenet_v1_1.0_224/mobilenet_v1_1.0_224_quant.tflite");
+async fn classify(
+    req: Request<hyper::body::Incoming>,
+) -> Result<Response<BoxBody<Bytes, hyper::Error>>, anyhow::Error> {
+    let model_data: &[u8] =
+        include_bytes!("models/mobilenet_v1_1.0_224/mobilenet_v1_1.0_224_quant.tflite");
     let labels = include_str!("models/mobilenet_v1_1.0_224/labels_mobilenet_quant_v1_224.txt");
-    let graph = GraphBuilder::new(GraphEncoding::TensorflowLite, ExecutionTarget::CPU).build_from_bytes(&[model_data])?;
+    let graph = GraphBuilder::new(GraphEncoding::TensorflowLite, ExecutionTarget::CPU)
+        .build_from_bytes(&[model_data])?;
     let mut ctx = graph.init_execution_context()?;
     /*
     let graph = unsafe {
@@ -29,14 +39,15 @@ async fn classify(req: Request<Body>) -> Result<Response<Body>, anyhow::Error> {
 
     match (req.method(), req.uri().path()) {
         // Serve some instructions at /
-        (&Method::GET, "/") => Ok(Response::new(Body::from(
+        (&Method::GET, "/") => Ok(Response::new(full(
             "Try POSTing data to /classify such as: `curl http://localhost:3000/classify -X POST --data-binary '@grace_hopper.jpg'`",
         ))),
 
         (&Method::POST, "/classify") => {
-            let buf = hyper::body::to_bytes(req.into_body()).await?;
+            let buf = req.collect().await?.to_bytes();
+
             let tensor_data = image_to_tensor(&buf, 224, 224);
-            ctx.set_input(0, TensorType::U8, &[1, 224, 224, 3], &tensor_data)?;
+          ctx.set_input(0, TensorType::U8, &[1, 224, 224, 3], &tensor_data)?;
             /*
             let tensor = wasi_nn::Tensor {
                 dimensions: &[1, 224, 224, 3],
@@ -79,7 +90,7 @@ async fn classify(req: Request<Body>) -> Result<Response<Body>, anyhow::Error> {
             let class_name = labels.lines().nth(results[0].0).unwrap_or("Unknown");
             println!("result: {} {}", class_name, results[0].1);
 
-            Ok(Response::new(Body::from(format!("{} is detected with {}/255 confidence", class_name, results[0].1))))
+            Ok(Response::new(full(format!("{} is detected with {}/255 confidence", class_name, results[0].1))))
         }
 
         // Return the 404 Not Found for other routes.
@@ -91,21 +102,114 @@ async fn classify(req: Request<Body>) -> Result<Response<Body>, anyhow::Error> {
     }
 }
 
+use pin_project::pin_project;
+
+#[pin_project]
+#[derive(Debug)]
+struct TokioIo<T> {
+    #[pin]
+    inner: T,
+}
+
+impl<T> TokioIo<T> {
+    pub fn new(inner: T) -> Self {
+        Self { inner }
+    }
+
+    #[allow(dead_code)]
+    pub fn inner(self) -> T {
+        self.inner
+    }
+}
+
+impl<T> hyper::rt::Read for TokioIo<T>
+where
+    T: tokio::io::AsyncRead,
+{
+    fn poll_read(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+        mut buf: hyper::rt::ReadBufCursor<'_>,
+    ) -> std::task::Poll<Result<(), std::io::Error>> {
+        let n = unsafe {
+            let mut tbuf = tokio::io::ReadBuf::uninit(buf.as_mut());
+            match tokio::io::AsyncRead::poll_read(self.project().inner, cx, &mut tbuf) {
+                Poll::Ready(Ok(())) => tbuf.filled().len(),
+                other => return other,
+            }
+        };
+
+        unsafe {
+            buf.advance(n);
+        }
+        Poll::Ready(Ok(()))
+    }
+}
+
+impl<T> hyper::rt::Write for TokioIo<T>
+where
+    T: tokio::io::AsyncWrite,
+{
+    fn poll_write(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &[u8],
+    ) -> Poll<Result<usize, std::io::Error>> {
+        tokio::io::AsyncWrite::poll_write(self.project().inner, cx, buf)
+    }
+
+    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), std::io::Error>> {
+        tokio::io::AsyncWrite::poll_flush(self.project().inner, cx)
+    }
+
+    fn poll_shutdown(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+    ) -> Poll<Result<(), std::io::Error>> {
+        tokio::io::AsyncWrite::poll_shutdown(self.project().inner, cx)
+    }
+
+    fn is_write_vectored(&self) -> bool {
+        tokio::io::AsyncWrite::is_write_vectored(&self.inner)
+    }
+
+    fn poll_write_vectored(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        bufs: &[std::io::IoSlice<'_>],
+    ) -> Poll<std::prelude::v1::Result<usize, std::io::Error>> {
+        tokio::io::AsyncWrite::poll_write_vectored(self.project().inner, cx, bufs)
+    }
+}
+
+fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
+    Full::new(chunk.into())
+        .map_err(|never| match never {})
+        .boxed()
+}
+
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
-    let make_svc = make_service_fn(|_| {
-        async move {
-            Ok::<_, Infallible>(service_fn(move |req| {
-                classify(req)
-            }))
-        }
-    });
-    let server = Server::bind(&addr).serve(make_svc);
-    if let Err(e) = server.await {
-        eprintln!("server error: {}", e);
+    let listener = unsafe {
+        let fd = wasmedge_wasi_socket::TcpListener::bind(addr, true)?.into_raw_fd();
+        TcpListener::from_std(std::net::TcpListener::from_raw_fd(fd))?
+    };
+
+    loop {
+        let (stream, _) = listener.accept().await?;
+        println!("accept");
+        let io = TokioIo::new(stream);
+
+        tokio::task::spawn(async move {
+            if let Err(err) = http1::Builder::new()
+                .serve_connection(io, service_fn(classify))
+                .await
+            {
+                println!("Error serving connection: {:?}", err);
+            }
+        });
     }
-    Ok(())
 
     /*
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
