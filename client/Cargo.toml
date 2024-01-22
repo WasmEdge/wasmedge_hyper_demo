@@ -4,12 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-hyper_wasi = { version = "0.15", features = ["full"] }
-tokio_wasi = { version = "1", features = [
-    "rt",
-    "macros",
-    "net",
-    "time",
-    "io-util",
-] }
+hyper = { version = "1", features = ["full"] }
+tokio = { version = "1", features = ["rt", "macros", "net", "time", "io-util"] }
 pretty_env_logger = "0.4.0"
+wasmedge_wasi_socket = "0.5"
+pin-project = "1.1.3"
+http-body-util = "0.1.0"
