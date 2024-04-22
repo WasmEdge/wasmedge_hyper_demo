@@ -4,11 +4,25 @@ version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[patch.crates-io]
+tokio = { git = "https://github.com/second-state/wasi_tokio.git", branch = "v1.36.x" }
+# mio = { git = "https://github.com/second-state/wasi_mio.git", branch = "v0.8.x" }
+socket2 = { git = "https://github.com/second-state/socket2.git", branch = "v0.5.x" }
+hyper = { git = "https://github.com/second-state/wasi_hyper.git", branch = "v0.14.x" }
+
 
 [dependencies]
-hyper_wasi = { version = "0.15", features = ["full"]}
-http-body-util = "0.1.0-rc.2"
-tokio_wasi = { version = "1", features = ["rt", "macros", "net", "time", "io-util"]}
+hyper = { version = "0.14", features = ["full"]}
+hyper-rustls = { version = "0.25", default-features = false, features = [
+    "http1",
+    "tls12",
+    "logging",
+    "ring",
+    "webpki-tokio",
+] }
+
+tokio = { version = "1", features = ["rt", "macros", "net", "time", "io-util"]}
 pretty_env_logger = "0.4.0"
-wasmedge_rustls_api = { version = "0.1", features = [ "tokio_async" ] }
-wasmedge_hyper_rustls = "0.1.0"
+
+rustls = { version = "0.22", default-features = false }
+webpki-roots = "0.26.1"

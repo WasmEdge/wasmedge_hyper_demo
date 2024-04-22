@@ -11,9 +11,21 @@ async fn main() {
 }
 
 async fn fetch_https_url(url: hyper::Uri) -> Result<()> {
-    let https = wasmedge_hyper_rustls::connector::new_https_connector(
-        wasmedge_rustls_api::ClientConfig::default(),
-    );
+    // Prepare the TLS client config
+    let mut root_store = rustls::RootCertStore::empty();
+    root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+
+    let tls = rustls::ClientConfig::builder()
+        .with_root_certificates(root_store)
+        .with_no_client_auth();
+
+    // Prepare the HTTPS connector
+    let https = hyper_rustls::HttpsConnectorBuilder::new()
+        .with_tls_config(tls)
+        .https_or_http()
+        .enable_http1()
+        .build();
+
     let client = Client::builder().build::<_, hyper::Body>(https);
 
     let res = client.get(url).await?;
