@@ -1,5 +1,5 @@
 [package]
-name = "wasmedge_warp_server"
+name = "wasmedge_axum_server"
 version = "0.1.0"
 edition = "2021"
 

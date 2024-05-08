@@ -78,12 +78,12 @@ jobs:
           exit 1
         fi
 
-    - name: Warp example
+    - name: Axum example
       run: |
-        cd server-warp
+        cd server-axum
         cargo build --target wasm32-wasi --release
-        wasmedgec target/wasm32-wasi/release/wasmedge_warp_server.wasm wasmedge_warp_server.wasm
-        nohup wasmedge wasmedge_warp_server.wasm &
+        wasmedgec target/wasm32-wasi/release/wasmedge_axum_server.wasm wasmedge_axum_server.wasm
+        nohup wasmedge wasmedge_axum_server.wasm &
         echo $! > wasmedge.pid
         sleep 15
         resp=$(curl http://localhost:8080/echo -X POST -d "WasmEdge")
