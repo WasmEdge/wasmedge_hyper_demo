@@ -1,19 +1,22 @@
 use hyper::service::{make_service_fn, service_fn};
-use hyper::{Body, Method, Request, Response, StatusCode, Server};
-use std::convert::Infallible;
-use std::net::SocketAddr;
-use std::result::Result;
-use std::io::Cursor;
+use hyper::{Body, Method, Request, Response, Server, StatusCode};
 use image::io::Reader;
 use image::DynamicImage;
-use wasi_nn::{GraphBuilder, GraphEncoding, ExecutionTarget, TensorType};
+use std::convert::Infallible;
+use std::io::Cursor;
+use std::net::SocketAddr;
+use std::result::Result;
+use tokio::net::TcpListener;
+use wasi_nn::{ExecutionTarget, GraphBuilder, GraphEncoding, TensorType};
 
 /// This is our service handler. It receives a Request, routes on its
 /// path, and returns a Future of a Response.
 async fn classify(req: Request<Body>) -> Result<Response<Body>, anyhow::Error> {
-    let model_data: &[u8] = include_bytes!("models/mobilenet_v1_1.0_224/mobilenet_v1_1.0_224_quant.tflite");
+    let model_data: &[u8] =
+        include_bytes!("models/mobilenet_v1_1.0_224/mobilenet_v1_1.0_224_quant.tflite");
     let labels = include_str!("models/mobilenet_v1_1.0_224/labels_mobilenet_quant_v1_224.txt");
-    let graph = GraphBuilder::new(GraphEncoding::TensorflowLite, ExecutionTarget::CPU).build_from_bytes(&[model_data])?;
+    let graph = GraphBuilder::new(GraphEncoding::TensorflowLite, ExecutionTarget::CPU)
+        .build_from_bytes(&[model_data])?;
     let mut ctx = graph.init_execution_context()?;
     /*
     let graph = unsafe {
@@ -94,14 +97,14 @@ async fn classify(req: Request<Body>) -> Result<Response<Body>, anyhow::Error> {
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
-    let make_svc = make_service_fn(|_| {
-        async move {
-            Ok::<_, Infallible>(service_fn(move |req| {
-                classify(req)
-            }))
-        }
-    });
-    let server = Server::bind(&addr).serve(make_svc);
+
+    let listener = TcpListener::bind(addr).await?;
+
+    let make_svc =
+        make_service_fn(
+            |_| async move { Ok::<_, Infallible>(service_fn(move |req| classify(req))) },
+        );
+    let server = Server::from_tcp(listener.into_std()?)?.serve(make_svc);
     if let Err(e) = server.await {
         eprintln!("server error: {}", e);
     }

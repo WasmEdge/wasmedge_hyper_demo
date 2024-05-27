@@ -1,5 +1,5 @@
 [package]
-name = "wasmedge_hyper_server_tflite"
+name = "wasmedge_axum_server"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,8 +9,7 @@ socket2 = { git = "https://github.com/second-state/socket2.git", branch = "v0.5.
 hyper = { git = "https://github.com/second-state/wasi_hyper.git", branch = "v0.14.x" }
 
 [dependencies]
-hyper = { version = "0.14", features = ["full"]}
+axum = "0.6"
+bytes = "1"
+futures-util = "0.3.30"
 tokio = { version = "1", features = ["rt", "macros", "net", "time", "io-util"]}
-image = { version = "0.23.14", default-features = false, features = ["gif", "jpeg", "ico", "png", "tiff", "webp", "bmp"]  }
-wasi-nn = "0.4.0"
-anyhow = "1.0"
