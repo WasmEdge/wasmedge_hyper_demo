@@ -8,12 +8,12 @@ services:
     runtime: io.containerd.wasmedge.v1
     ports:
       - 8080:8080
-  server-warp: # docker compose run --no-TTY -p 8080:8080 server-warp
-    image: demo-server-warp
+  server-warp: # docker compose run --no-TTY -p 8080:8080 server-axum
+    image: demo-server-axum
     platform: wasi/wasm
     build:
       context: .
-      target: server-warp
+      target: server-axum
     runtime: io.containerd.wasmedge.v1
     ports:
       - 8080:8080
