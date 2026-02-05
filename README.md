@@ -1,10 +1,10 @@
 # WasmEdge Hyper Demo
 
-In this project, we demonstrate how to use **hyper** and **tokio** to build async http client in WebAssembly and execute it using [WasmEdge](https://github.com/WasmEdge/WasmEdge).
+In this project, we demonstrate how to use **hyper** and **tokio** to build async HTTP client and server in WebAssembly and execute it using [WasmEdge](https://github.com/WasmEdge/WasmEdge).
 
 ## Why tokio in WasmEdge?
 
-There are growing demands to perform network requests in WASM and cloud computing. But it would be inefficient to perform network requests synchronously so we need async in WASM. 
+There are growing demands to perform network requests in WASM and cloud computing. But it would be inefficient to perform network requests synchronously so we need async in WASM.
 
 As tokio is widely accepted, we can bring many projects that depend on tokio to WASM if we can port tokio into WASM. After that, the developers can have async functions in WASM as well as efficient programs.
 
@@ -37,63 +37,115 @@ $ docker compose run --no-TTY -p 8080:8080 server
 $ curl http://localhost:8080/echo -X POST -d "WasmEdge"
 WasmEdge
 
-# To run the Warp HTTP server
-$ docker compose run --no-TTY -p 8080:8080 server-warp
+# To run the Axum HTTP server
+$ docker compose run --no-TTY -p 8080:8080 server-axum
 ... ...
 # Test the HTTP server using curl
 $ curl http://localhost:8080/echo -X POST -d "WasmEdge"
 WasmEdge
-
 ```
 
-It runs both the client and server examples in this repo. See the [Dockerfile](Dockerfile) and [docker-compose.yml](docker-compose.yml) files.  The [client example](client) will run and quit upon completion. The [server example](server) starts a server that listens for incoming HTTP requests, and you can interact with it through `curl`.
+It runs both the client and server examples in this repo. See the [Dockerfile](Dockerfile) and [docker-compose.yml](docker-compose.yml) files. The [client example](client) will run and quit upon completion. The [server example](server) starts a server that listens for incoming HTTP requests, and you can interact with it through `curl`.
 
-However, if you want to build and run the examples step by step on your own system. Follow the detailed instructions below.
+However, if you want to build and run the examples step by step on your own system, follow the detailed instructions below.
 
 ## Prerequisites
 
-We need install rust and wasm target first.
+### Install Rust
 
-```bash 
-# install rust 
+Install Rust and add the `wasm32-wasip1` target:
+
+```bash
+# Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
 
-# install wasm target 
-rustup target add wasm32-wasi
+# Install the WASM target
+rustup target add wasm32-wasip1
 ```
 
-Then install the WasmEdge. You will need `all` extensions to run the [HTTP server with Tensorflow](server-tflite/README.md) example.
+**Note:** The target `wasm32-wasi` has been renamed to `wasm32-wasip1` in Rust 1.84+. If you're using an older Rust version, use `wasm32-wasi` instead.
+
+### Install WasmEdge
+
+Install the WasmEdge runtime:
+
+```bash
+curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash
+source $HOME/.wasmedge/env
+```
+
+To run the [HTTP server with Tensorflow](server-tflite/README.md) example, install with all extensions:
 
 ```bash
 curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -e all
 source $HOME/.wasmedge/env
 ```
 
-## Add dependencies in **Cargo.toml**
+## Project Configuration
 
-In this project, we add tokio and reqwest as dependencies.
+### Cargo.toml Dependencies
+
+This project uses patched versions of tokio, hyper, mio, and socket2 for WASI compatibility:
 
 ```toml
+[patch.crates-io]
+tokio = { git = "https://github.com/second-state/wasi_tokio.git", branch = "v1.36.x" }
+socket2 = { git = "https://github.com/second-state/socket2.git", branch = "v0.5.x" }
+hyper = { git = "https://github.com/second-state/wasi_hyper.git", branch = "v0.14.x" }
+mio = { git = "https://github.com/second-state/wasi_mio.git", branch = "v0.8.x" }
+
 [dependencies]
-hyper_wasi = { version = "0.15", features = ["full"]}
-tokio_wasi = { version = "1", features = ["rt", "macros", "net", "time", "io-util"]}
+hyper = { version = "0.14", features = ["full"]}
+tokio = { version = "1.36", features = ["rt", "macros", "net", "time", "io-util"]}
+```
+
+### Cargo Config
+
+Create `.cargo/config.toml` in your project root:
+
+```toml
+[build]
+target = "wasm32-wasip1"
+
+[target.wasm32-wasip1]
+runner = "wasmedge"
+```
+
+## Building
+
+Build the project with:
+
+```bash
+cargo build --release
+```
+
+The output `.wasm` file will be in `target/wasm32-wasip1/release/`.
+
+## Running
+
+Run the compiled WebAssembly with WasmEdge:
+
+```bash
+wasmedge target/wasm32-wasip1/release/wasmedge_hyper_server.wasm
 ```
 
 ## Examples
 
 Details about the example apps are as below.
 
-* [HTTP client](client/README.md) 
-* [HTTP server](server/README.md) 
-* [HTTP server in warp framework](server-warp/README.md) 
-* [HTTP server with Tensorflow](server-tflite/README.md) 
+* [HTTP client](client/README.md)
+* [HTTP server](server/README.md)
+* [HTTP server with Axum framework](server-axum/README.md)
+* [HTTP server with Tensorflow](server-tflite/README.md)
 
-# FAQ
+## Version Compatibility
 
-## use of unstable library feature 'wasi_ext'
-
-If you are using rustc 1.64, you may encounter this error. There are two options:
-
-1. Update rustc to newer version. Validated versions are `1.65` and `1.59`.
-2. Add `#![feature(wasi_ext)]` to the top of `mio/src/lib.rs`.
+| Component | Version |
+|-----------|---------|
+| Rust | 1.83+ (stable) |
+| WasmEdge | 0.16.1+ |
+| Target | wasm32-wasip1 |
+| tokio | 1.36.x (patched) |
+| hyper | 0.14.x (patched) |
+| mio | 0.8.x (patched) |
