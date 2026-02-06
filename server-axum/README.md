@@ -3,13 +3,13 @@
 ## Build
 
 ```bash
-cargo build --target wasm32-wasi --release
+cargo build --target wasm32-wasip1 --release
 ```
 
 ## Run
 
 ```bash
-wasmedge target/wasm32-wasi/release/wasmedge_axum_server.wasm
+wasmedge target/wasm32-wasip1/release/wasmedge_axum_server.wasm
 ```
 
 ## Test

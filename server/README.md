@@ -14,13 +14,13 @@ Next, you can jump directly to the [Test](#test) section. If you want to build a
 ## Build
 
 ```bash
-cargo build --target wasm32-wasi --release
+cargo build --target wasm32-wasip1 --release
 ```
 
 ## Run
 
 ```bash
-wasmedge target/wasm32-wasi/release/wasmedge_hyper_server.wasm
+wasmedge target/wasm32-wasip1/release/wasmedge_hyper_server.wasm
 ```
 
 ## Test

@@ -14,13 +14,13 @@ If you want to build and run the application step by step on your own system, re
 ## Build
 
 ```bash
-cargo build --target wasm32-wasi --release
+cargo build --target wasm32-wasip1 --release
 ```
 
 ## Run
 
 ```bash
-$ wasmedge target/wasm32-wasi/release/wasmedge_hyper_client.wasm
+$ wasmedge target/wasm32-wasip1/release/wasmedge_hyper_client.wasm
 
 GET as byte stream: http://eu.httpbin.org/get?msg=Hello
 Response: 200 OK

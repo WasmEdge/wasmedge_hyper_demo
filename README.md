@@ -143,8 +143,8 @@ Details about the example apps are as below.
 
 | Component | Version |
 |-----------|---------|
-| Rust | 1.83+ (stable) |
-| WasmEdge | 0.16.1+ |
+| Rust | Latest stable |
+| WasmEdge | Latest |
 | Target | wasm32-wasip1 |
 | tokio | 1.36.x (patched) |
 | hyper | 0.14.x (patched) |
