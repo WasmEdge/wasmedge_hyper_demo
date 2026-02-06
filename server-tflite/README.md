@@ -5,8 +5,7 @@
 In order to run this example, you will first install WasmEdge with Tensorflow Lite plugin:
 
 ```
-VERSION=0.13.1
-curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $VERSION --plugins wasi_nn-tensorflowlite
+curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- --plugins wasi_nn-tensorflowlite
 ```
 
 Then, install Tensorflow Lite dependency libraries:
@@ -24,13 +23,13 @@ mv libtensorflowlite_flex.so ~/.wasmedge/lib
 ## Build
 
 ```
-cargo build --target wasm32-wasi --release
+cargo build --target wasm32-wasip1 --release
 ```
 
 ## Run
 
 ```
-wasmedge target/wasm32-wasi/release/wasmedge_hyper_server_tflite.wasm
+wasmedge target/wasm32-wasip1/release/wasmedge_hyper_server_tflite.wasm
 ```
 
 ## Test
