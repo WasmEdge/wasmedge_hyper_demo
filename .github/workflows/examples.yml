@@ -125,3 +125,119 @@ jobs:
         else
           echo "Client test skipped (network may be unavailable)"
         fi
+
+  macos:
+    runs-on: macos-14
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install latest Rust and wasm target
+      run: |
+        rustup update stable
+        rustup target add wasm32-wasip1
+
+    - name: Install wasi-sdk
+      run: |
+        WASI_SDK_VERSION=25
+        curl -sL https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${WASI_SDK_VERSION}/wasi-sdk-${WASI_SDK_VERSION}.0-arm64-macos.tar.gz | tar xz
+        echo "WASI_SDK_PATH=$(pwd)/wasi-sdk-${WASI_SDK_VERSION}.0-arm64-macos" >> $GITHUB_ENV
+        echo "CC_wasm32_wasip1=$(pwd)/wasi-sdk-${WASI_SDK_VERSION}.0-arm64-macos/bin/clang" >> $GITHUB_ENV
+
+    - name: Install latest WasmEdge
+      run: |
+        curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash
+        echo "$HOME/.wasmedge/bin" >> $GITHUB_PATH
+
+    - name: Build server
+      run: |
+        cd server
+        cargo build --target wasm32-wasip1 --release
+
+    - name: Build client
+      run: |
+        cd client
+        cargo build --target wasm32-wasip1 --release
+
+    - name: Build server-axum
+      run: |
+        cd server-axum
+        cargo build --target wasm32-wasip1 --release
+
+    - name: Test server with curl
+      run: |
+        cd server
+        nohup wasmedge target/wasm32-wasip1/release/wasmedge_hyper_server.wasm &
+        echo $! > wasmedge.pid
+        sleep 5
+
+        echo "Testing GET /"
+        resp=$(curl -s http://localhost:8080/)
+        echo "$resp"
+        if [[ $resp != *"curl"* ]]; then
+          echo "GET / failed"
+          kill -9 `cat wasmedge.pid` 2>/dev/null || true
+          exit 1
+        fi
+
+        echo "Testing POST /echo"
+        resp=$(curl -s http://localhost:8080/echo -X POST -d "WasmEdge")
+        echo "$resp"
+        if [[ $resp != *"WasmEdge"* ]]; then
+          echo "POST /echo failed"
+          kill -9 `cat wasmedge.pid` 2>/dev/null || true
+          exit 1
+        fi
+
+        echo "Testing POST /echo/reversed"
+        resp=$(curl -s http://localhost:8080/echo/reversed -X POST -d "WasmEdge")
+        echo "$resp"
+        if [[ $resp != *"egdEmsaW"* ]]; then
+          echo "POST /echo/reversed failed"
+          kill -9 `cat wasmedge.pid` 2>/dev/null || true
+          exit 1
+        fi
+
+        kill -9 `cat wasmedge.pid` 2>/dev/null || true
+        rm -f wasmedge.pid
+        echo "Server tests passed!"
+
+    - name: Test server-axum with curl
+      run: |
+        cd server-axum
+        nohup wasmedge target/wasm32-wasip1/release/wasmedge_axum_server.wasm &
+        echo $! > wasmedge.pid
+        sleep 5
+
+        echo "Testing GET /"
+        resp=$(curl -s http://localhost:8080/)
+        echo "$resp"
+        if [[ $resp != *"curl"* ]]; then
+          echo "GET / failed"
+          kill -9 `cat wasmedge.pid` 2>/dev/null || true
+          exit 1
+        fi
+
+        echo "Testing POST /echo"
+        resp=$(curl -s http://localhost:8080/echo -X POST -d "WasmEdge")
+        echo "$resp"
+        if [[ $resp != *"WasmEdge"* ]]; then
+          echo "POST /echo failed"
+          kill -9 `cat wasmedge.pid` 2>/dev/null || true
+          exit 1
+        fi
+
+        kill -9 `cat wasmedge.pid` 2>/dev/null || true
+        rm -f wasmedge.pid
+        echo "Axum server tests passed!"
+
+    - name: Test client (connects to httpbin.org)
+      run: |
+        cd client
+        resp=$(wasmedge target/wasm32-wasip1/release/wasmedge_hyper_client.wasm 2>&1) || true
+        echo "$resp"
+        if [[ $resp == *"WasmEdge"* ]]; then
+          echo "Client test passed!"
+        else
+          echo "Client test skipped (network may be unavailable)"
+        fi
